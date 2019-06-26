@@ -54,6 +54,14 @@ trap cleanup INT TERM
 # in case we run with ASAN enabled, we must increase stck size.
 ulimit -s 16384
 
+(
+cd "$REPODIR"
+mkdir -p deps
+cd deps
+wget https://github.com/ethereum/evmone/releases/download/v0.1.0/evmone-0.1.0-linux-x86_64.tar.gz -O - | tar xz
+)
+
+
 BOOST_TEST_ARGS="--color_output=no --show_progress=yes --logger=JUNIT,error,test_results/$EVM.xml"
 SOLTEST_ARGS="--evm-version=$EVM --ipcpath "${WORKDIR}/geth.ipc" $flags"
 test "${SOLTEST_IPC}" = "1" || SOLTEST_ARGS="$SOLTEST_ARGS --no-ipc"

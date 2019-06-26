@@ -13,6 +13,7 @@ eth_policy()
 set(PROJECT_VERSION "0.5.11")
 project(solidity VERSION ${PROJECT_VERSION} LANGUAGES C CXX)
 
+
 if (${CMAKE_VERSION} VERSION_LESS "3.9.0")
 	# needed for the big endian test for older cmake versions
 	enable_language(C)
