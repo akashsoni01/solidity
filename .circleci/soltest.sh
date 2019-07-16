@@ -59,6 +59,7 @@ cd "$REPODIR"
 mkdir -p deps
 cd deps
 wget https://github.com/ethereum/evmone/releases/download/v0.1.0/evmone-0.1.0-linux-x86_64.tar.gz -O - | tar xz
+mv deps/lib/libevmone.so .
 )
 
 
