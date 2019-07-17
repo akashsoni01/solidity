@@ -36,36 +36,24 @@ set -e
 OPTIMIZE=${OPTIMIZE:-"0"}
 EVM=${EVM:-"invalid"}
 WORKDIR=${CIRCLE_WORKING_DIRECTORY:-.}
-SOLTEST_IPC=${SOLTEST_IPC:-1}
 REPODIR="$(realpath $(dirname $0)/..)"
-ALETH_PATH="/usr/bin/aleth"
 
 source "${REPODIR}/scripts/common.sh"
 # Test result output directory (CircleCI is reading test results from here)
 mkdir -p test_results
 
-ALETH_PID=$(run_aleth)
-
-function cleanup() {
-	safe_kill $ALETH_PID $ALETH_PATH
-}
-trap cleanup INT TERM
-
 # in case we run with ASAN enabled, we must increase stck size.
 ulimit -s 16384
 
+# TODO this should be in the new docker image
 (
-cd "$REPODIR"
-mkdir -p deps
-cd deps
-wget https://github.com/ethereum/evmone/releases/download/v0.1.0/evmone-0.1.0-linux-x86_64.tar.gz -O - | tar xz
-mv deps/lib/libevmone.so .
+cd /usr/
+wget -q https://github.com/ethereum/evmone/releases/download/v0.1.0/evmone-0.1.0-linux-x86_64.tar.gz -O - | tar xz
 )
 
 
 BOOST_TEST_ARGS="--color_output=no --show_progress=yes --logger=JUNIT,error,test_results/$EVM.xml"
-SOLTEST_ARGS="--evm-version=$EVM --ipcpath "${WORKDIR}/geth.ipc" $flags"
-test "${SOLTEST_IPC}" = "1" || SOLTEST_ARGS="$SOLTEST_ARGS --no-ipc"
+SOLTEST_ARGS="--evm-version=$EVM --evmonepath /usr/lib/libevmone.so $flags"
 test "${OPTIMIZE}" = "1" && SOLTEST_ARGS="${SOLTEST_ARGS} --optimize"
 test "${ABI_ENCODER_V2}" = "1" && SOLTEST_ARGS="${SOLTEST_ARGS} --abiencoderv2 --optimize-yul"
 
