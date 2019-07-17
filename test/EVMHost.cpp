@@ -37,7 +37,6 @@ using namespace std;
 using namespace dev;
 using namespace dev::test;
 
-
 evmc::vm* EVMHost::getVM(string const& _path)
 {
 	static unique_ptr<evmc::vm> theVM;
