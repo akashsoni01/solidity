@@ -275,7 +275,7 @@ private:
 
 	static unsigned getIntWidth(IntegerType const& _x)
 	{
-		return 8 * ((_x.width() % 32) + 1);
+		return 8 * (_x.width() % 32 + 1);
 	}
 
 	static bool isIntSigned(IntegerType const& _x)
@@ -290,12 +290,12 @@ private:
 
 	static std::string getIntTypeAsString(IntegerType const& _x)
 	{
-		return ((isIntSigned(_x) ? "int" : "uint") + std::to_string(getIntWidth(_x)));
+		return (isIntSigned(_x) ? "int" : "uint") + std::to_string(getIntWidth(_x));
 	}
 
 	static unsigned getFixedByteWidth(FixedByteType const& _x)
 	{
-		return (_x.width() % 32) + 1;
+		return _x.width() % 32 + 1;
 	}
 
 	static std::string getFixedByteTypeAsString(FixedByteType const& _x)
@@ -358,6 +358,11 @@ private:
 		);
 	}
 
+	static bool addCheck(unsigned _counter)
+	{
+		return _counter % s_arrayCheckFrequency == 0;
+	}
+
 	/// Contains the test program
 	std::ostringstream m_output;
 	/// Temporary storage for state variable definitions
@@ -376,6 +381,9 @@ private:
 	unsigned m_returnValue;
 	static unsigned constexpr s_maxArrayLength = 4;
 	static unsigned constexpr s_maxArrayDimensions = 10;
+	/// Add check only if counter returned by getNextCounter()
+	/// is divisible by s_arrayCheckFrequency
+	static unsigned constexpr s_arrayCheckFrequency = 11;
 	/// Prefixes for declared and parameterized variable names
 	static auto constexpr s_varNamePrefix = "x_";
 	static auto constexpr s_paramNamePrefix = "c_";
