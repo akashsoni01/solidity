@@ -120,8 +120,19 @@ bool BMC::visit(ContractDefinition const& _contract)
 	return true;
 }
 
+void BMC::endVisit(ContractDefinition const& _contract)
+{
+	SMTEncoder::endVisit(_contract);
+}
+
 bool BMC::visit(FunctionDefinition const& _function)
 {
+	auto contract = dynamic_cast<ContractDefinition const*>(_function.scope());
+	solAssert(contract, "");
+	solAssert(m_currentContract, "");
+	if (contract != m_currentContract)
+		initializeStateVariables(*contract);
+
 	if (m_callStack.empty())
 		reset();
 
