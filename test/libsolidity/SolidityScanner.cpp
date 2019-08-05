@@ -605,6 +605,24 @@ BOOST_AUTO_TEST_CASE(regular_line_breaks_in_single_line_doc_comment)
 	}
 }
 
+BOOST_AUTO_TEST_CASE(doxygen_comment_multiline_lf)
+{
+	Scanner scanner{CharStream{"/// Hello\n/// World\nident\n", ""}};
+	BOOST_CHECK_EQUAL(scanner.currentCommentLiteral(), "Hello\n World");
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "ident");
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
+BOOST_AUTO_TEST_CASE(doxygen_comment_multiline_crlf)
+{
+	Scanner scanner{CharStream{"/// Hello\r\n/// World\r\nident\r\n", ""}};
+	BOOST_CHECK_EQUAL(scanner.currentCommentLiteral(), "Hello\n World");
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "ident");
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
 BOOST_AUTO_TEST_CASE(irregular_line_breaks_in_single_line_doc_comment)
 {
 	for (auto const& nl: {"\v", "\f", "\xE2\x80\xA8", "\xE2\x80\xA9"})

@@ -289,7 +289,7 @@ Token Scanner::scanSingleLineDocComment()
 
 	while (!isSourcePastEndOfInput())
 	{
-		if (isLineTerminator(m_char))
+		if (m_char == '\n' || (m_char == '\r' && !m_source->isPastEndOfInput(2) && m_source->get(1) == '\n'))
 		{
 			// check if next line is also a documentation comment
 			skipWhitespace();
@@ -303,7 +303,6 @@ Token Scanner::scanSingleLineDocComment()
 			}
 			else
 				break; // next line is not a documentation comment, we are done
-
 		}
 		else if (isUnicodeLinebreak())
 			// Any line terminator that is not '\n' is considered to end the

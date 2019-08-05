@@ -19,6 +19,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Scanner: Fix parsing doxygen style multiline comments with triple slashes when file is encoded with CRLF instead of LF.
  * SMTChecker: Fix internal error when inlining functions that contain tuple expressions.
  * SMTChecker: Fix pointer knowledge erasing in loops.
  * View/Pure Checker: Properly detect state variable access through base class.
