@@ -1652,10 +1652,7 @@ bool ArrayType::validForCalldata() const
 
 bigint ArrayType::unlimitedCalldataEncodedSize(bool _padded) const
 {
-	if (isDynamicallyEncoded())
-		return 32;
-	// Array elements are always padded.
-	bigint size = bigint(length()) * (isByteArray() ? 1 : baseType()->calldataEncodedSize(true));
+	bigint size = bigint(length()) * (isByteArray() ? 1 : baseType()->calldataEncodedStride());
 	if (_padded)
 		size = ((size + 31) / 32) * 32;
 	return size;
@@ -1663,7 +1660,26 @@ bigint ArrayType::unlimitedCalldataEncodedSize(bool _padded) const
 
 unsigned ArrayType::calldataEncodedSize(bool _padded) const
 {
+	solAssert(!isDynamicallyEncoded(), "");
 	bigint size = unlimitedCalldataEncodedSize(_padded);
+	solAssert(size <= numeric_limits<unsigned>::max(), "Array size does not fit unsigned.");
+	return unsigned(size);
+}
+
+unsigned ArrayType::calldataEncodedStride() const
+{
+	if (isDynamicallyEncoded())
+		return 32;
+	else
+		return calldataEncodedSize(true);
+}
+
+unsigned ArrayType::calldataEncodedTailSize() const
+{
+	solAssert(isDynamicallyEncoded(), "");
+	if (isDynamicallySized())
+		return 32;
+	bigint size = unlimitedCalldataEncodedSize(false);
 	solAssert(size <= numeric_limits<unsigned>::max(), "Array size does not fit unsigned.");
 	return unsigned(size);
 }
@@ -1993,10 +2009,10 @@ bool StructType::operator==(Type const& _other) const
 	return ReferenceType::operator==(other) && other.m_struct == m_struct;
 }
 
+
 unsigned StructType::calldataEncodedSize(bool) const
 {
-	if (isDynamicallyEncoded())
-		return 32;
+	solAssert(!isDynamicallyEncoded(), "");
 
 	unsigned size = 0;
 	for (auto const& member: members(nullptr))
@@ -2005,7 +2021,35 @@ unsigned StructType::calldataEncodedSize(bool) const
 		else
 		{
 			// Struct members are always padded.
-			unsigned memberSize = member.type->calldataEncodedSize(true);
+			unsigned memberSize = member.type->calldataEncodedSize();
+			if (memberSize == 0)
+				return 0;
+			size += memberSize;
+		}
+	return size;
+}
+
+
+unsigned StructType::calldataEncodedStride() const
+{
+	if (isDynamicallyEncoded())
+		return 32;
+	else
+		return calldataEncodedSize(true);
+}
+
+unsigned StructType::calldataEncodedTailSize() const
+{
+	solAssert(isDynamicallyEncoded(), "");
+
+	unsigned size = 0;
+	for (auto const& member: members(nullptr))
+		if (!member.type->canLiveOutsideStorage())
+			return 0;
+		else
+		{
+			// Struct members are always padded.
+			unsigned memberSize = member.type->calldataEncodedStride();
 			if (memberSize == 0)
 				return 0;
 			size += memberSize;
@@ -2023,7 +2067,7 @@ unsigned StructType::calldataOffsetOfMember(std::string const& _member) const
 			return offset;
 		{
 			// Struct members are always padded.
-			unsigned memberSize = member.type->calldataEncodedSize(true);
+			unsigned memberSize = member.type->calldataEncodedStride();
 			solAssert(memberSize != 0, "");
 			offset += memberSize;
 		}

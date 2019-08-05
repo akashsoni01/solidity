@@ -98,16 +98,17 @@ void CompilerUtils::revertWithStringData(Type const& _argumentType)
 void CompilerUtils::accessCalldataTail(Type const& _type)
 {
 	solAssert(_type.dataStoredIn(DataLocation::CallData), "");
+	solAssert(_type.isDynamicallyEncoded(), "");
 
-	unsigned int baseEncodedSize = _type.calldataEncodedSize();
-	solAssert(baseEncodedSize > 1, "");
+	unsigned int tailSize = _type.calldataEncodedTailSize();
+	solAssert(tailSize > 1, "");
 
 	// returns the absolute offset of the tail in "base_ref"
 	m_context.appendInlineAssembly(Whiskers(R"({
 		let rel_offset_of_tail := calldataload(ptr_to_tail)
 		if iszero(slt(rel_offset_of_tail, sub(sub(calldatasize(), base_ref), sub(<neededLength>, 1)))) { revert(0, 0) }
 		base_ref := add(base_ref, rel_offset_of_tail)
-	})")("neededLength", toCompactHexWithPrefix(baseEncodedSize)).render(), {"base_ref", "ptr_to_tail"});
+	})")("neededLength", toCompactHexWithPrefix(tailSize)).render(), {"base_ref", "ptr_to_tail"});
 	// stack layout: <absolute_offset_of_tail> <garbage>
 
 	if (!_type.isDynamicallySized())
@@ -251,7 +252,7 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 	//@todo this does not yet support nested dynamic arrays
 	size_t encodedSize = 0;
 	for (auto const& t: _typeParameters)
-		encodedSize += t->decodingType()->calldataEncodedSize(true);
+		encodedSize += t->decodingType()->calldataEncodedStride();
 	m_context.appendInlineAssembly("{ if lt(len, " + to_string(encodedSize) + ") { revert(0, 0) } }", {"len"});
 
 	m_context << Instruction::DUP2 << Instruction::ADD;
@@ -306,7 +307,7 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 					// Size has already been checked for this one.
 					moveIntoStack(2);
 					m_context << Instruction::DUP3;
-					m_context << u256(arrayType.calldataEncodedSize(true)) << Instruction::ADD;
+					m_context << u256(arrayType.calldataEncodedStride()) << Instruction::ADD;
 				}
 			}
 			else
@@ -343,7 +344,7 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 					// size has already been checked
 					// stack: input_end base_offset data_offset
 					m_context << Instruction::DUP1;
-					m_context << u256(calldataType->calldataEncodedSize()) << Instruction::ADD;
+					m_context << u256(calldataType->calldataEncodedStride()) << Instruction::ADD;
 				}
 				if (arrayType.location() == DataLocation::Memory)
 				{

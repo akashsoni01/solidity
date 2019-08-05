@@ -656,7 +656,7 @@ string YulUtilFunctions::arrayConvertLengthToSize(ArrayType const& _type)
 						</byteArray>
 					})")
 					("functionName", functionName)
-					("elementSize", to_string(_type.location() == DataLocation::Memory ? baseType.memoryHeadSize() : baseType.calldataEncodedSize()))
+					("elementSize", to_string(_type.location() == DataLocation::Memory ? baseType.memoryHeadSize() : baseType.calldataEncodedStride()))
 					("byteArray", _type.isByteArray())
 					("mul", overflowCheckedIntMulFunction(*TypeProvider::uint256()))
 					.render();
@@ -812,7 +812,7 @@ string YulUtilFunctions::nextArrayElementFunction(ArrayType const& _type)
 		}
 		case DataLocation::CallData:
 		{
-			u256 size = _type.baseType()->calldataEncodedSize();
+			u256 size = _type.baseType()->calldataEncodedStride();
 			solAssert(size >= 32 && size % 32 == 0, "");
 			templ("advance", toCompactHexWithPrefix(size));
 			break;

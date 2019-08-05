@@ -1962,7 +1962,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 				break;
 			}
 			else if (retType->decodingType())
-				retSize += retType->decodingType()->calldataEncodedSize();
+				retSize += retType->decodingType()->calldataEncodedSize	();
 			else
 				retSize += retType->calldataEncodedSize();
 	}
